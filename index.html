@@ -1,53 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Study AI - Quiz</title>
+  <meta charset="UTF-8">
+  <title>Study AI 📚</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 700px;
+      margin: auto;
+      padding: 20px;
+    }
+    select, input, textarea, button {
+      width: 100%;
+      margin: 6px 0;
+      padding: 8px;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      white-space: pre-wrap;
+    }
+  </style>
 </head>
 <body>
-  <h1>Study AI 📚</h1>
 
-  <label>Subject:</label><br>
-  <input id="subject"><br><br>
+<h2>Study AI 📚</h2>
 
-  <label>Material / Topic:</label><br>
-  <input id="material"><br><br>
+<select id="mode">
+  <option value="quiz">Quiz</option>
+  <option value="flashcards">Flashcards</option>
+  <option value="summary">Summarizer</option>
+  <option value="notes">Note Maker</option>
+</select>
 
-  <label>Number of Questions:</label><br>
-  <input id="qamount" type="number" value="5"><br><br>
+<input id="subject" placeholder="Subject">
+<input id="material" placeholder="Specific topic">
+<input id="amount" placeholder="Number of questions / flashcards">
+<textarea id="text" placeholder="Paste text (for summarizer)"></textarea>
 
-  <label>Question Type:</label><br>
-  <select id="qtype">
-    <option value="Choices">Multiple Choice</option>
-    <option value="True/False">True / False</option>
-  </select><br><br>
+<button onclick="run()">Generate</button>
 
-  <button onclick="generateQuiz()">Generate Quiz</button>
+<pre id="output"></pre>
 
-  <pre id="out"></pre>
+<script>
+const API_KEY = "gsk_XXXXXXXXXXXXXXXXXXXXXXXX"; // your key
+const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-  <script>
-    async function generateQuiz() {
-      const subject = document.getElementById("subject").value;
-      const material = document.getElementById("material").value;
-      const qamount = document.getElementById("qamount").value;
-      const qtype = document.getElementById("qtype").value;
+async function run() {
+  const mode = modeEl.value;
+  const subject = subjectEl.value;
+  const material = materialEl.value;
+  const amount = amountEl.value;
+  const text = textEl.value;
 
-      document.getElementById("out").textContent = "Generating quiz...";
+  let prompt = "";
 
-      const res = await fetch("/api/quiz", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subject,
-          material,
-          qamount,
-          qtype
-        })
-      });
+  if (mode === "quiz") {
+    prompt = `Create exactly ${amount} questions about ${subject}, focused on ${material}. Do not include answers.`;
+  } else if (mode === "flashcards") {
+    prompt = `Create exactly ${amount} flashcards about ${subject}, focused on ${material}. Format strictly as Q: / A:.`;
+  } else if (mode === "summary") {
+    prompt = `Summarize the following text clearly and concisely:\n\n${text}`;
+  } else {
+    prompt = `Generate concise study notes for '${material}' in '${subject}'. Use bullet points only.`;
+  }
 
-      const text = await res.text();
-      document.getElementById("out").textContent = text;
-    }
-  </script>
+  output.textContent = "Loading...";
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-oss-120b",
+      messages: [{ role: "user", content: prompt }]
+    })
+  });
+
+  const data = await res.json();
+  output.textContent =
+    data.choices?.[0]?.message?.content || "Error occurred";
+}
+
+const modeEl = document.getElementById("mode");
+const subjectEl = document.getElementById("subject");
+const materialEl = document.getElementById("material");
+const amountEl = document.getElementById("amount");
+const textEl = document.getElementById("text");
+const output = document.getElementById("output");
+</script>
+
 </body>
 </html>

@@ -1,8 +1,8 @@
 import os
+import json
 from groq import Groq
 
 def handler(request):
-    # Only allow POST
     if request.method != "POST":
         return {
             "statusCode": 405,
@@ -22,10 +22,10 @@ def handler(request):
         f"You are a deterministic quiz generator. "
         f"Create exactly {qamount} questions about {subject}, "
         f"focused on {material}, using the question type {qtype}. "
-        f"Do NOT include answers, explanations, hints, emojis, or markdown. "
-        f"Number each question clearly. "
-        f"If Choices, use exactly 4 options labeled A–D. "
-        f"If True/False, ensure each question is unambiguous."
+        "Do NOT include answers, explanations, hints, emojis, or markdown. "
+        "Number each question clearly. "
+        "If Choices, use exactly 4 options labeled A–D. "
+        "If True/False, ensure each question is unambiguous."
     )
 
     response = client.chat.completions.create(
@@ -33,12 +33,8 @@ def handler(request):
         messages=[{"role": "user", "content": prompt}]
     )
 
-    questions = response.choices[0].message.content
-
     return {
         "statusCode": 200,
-        "headers": {
-            "Content-Type": "application/json"
-        },
-        "body": questions
+        "headers": { "Content-Type": "text/plain" },
+        "body": response.choices[0].message.content
     }

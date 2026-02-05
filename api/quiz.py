@@ -1,0 +1,44 @@
+import os
+from groq import Groq
+
+def handler(request):
+    # Only allow POST
+    if request.method != "POST":
+        return {
+            "statusCode": 405,
+            "body": "Method Not Allowed"
+        }
+
+    data = request.json()
+
+    subject = data.get("subject", "")
+    material = data.get("material", "")
+    qamount = data.get("qamount", "5")
+    qtype = data.get("qtype", "Choices")
+
+    client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+    prompt = (
+        f"You are a deterministic quiz generator. "
+        f"Create exactly {qamount} questions about {subject}, "
+        f"focused on {material}, using the question type {qtype}. "
+        f"Do NOT include answers, explanations, hints, emojis, or markdown. "
+        f"Number each question clearly. "
+        f"If Choices, use exactly 4 options labeled A–D. "
+        f"If True/False, ensure each question is unambiguous."
+    )
+
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-120b",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    questions = response.choices[0].message.content
+
+    return {
+        "statusCode": 200,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": questions
+    }

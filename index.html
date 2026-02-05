@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Study AI - Quiz</title>
+</head>
+<body>
+  <h1>Study AI 📚</h1>
+
+  <label>Subject:</label><br>
+  <input id="subject"><br><br>
+
+  <label>Material / Topic:</label><br>
+  <input id="material"><br><br>
+
+  <label>Number of Questions:</label><br>
+  <input id="qamount" type="number" value="5"><br><br>
+
+  <label>Question Type:</label><br>
+  <select id="qtype">
+    <option value="Choices">Multiple Choice</option>
+    <option value="True/False">True / False</option>
+  </select><br><br>
+
+  <button onclick="generateQuiz()">Generate Quiz</button>
+
+  <pre id="out"></pre>
+
+  <script>
+    async function generateQuiz() {
+      const subject = document.getElementById("subject").value;
+      const material = document.getElementById("material").value;
+      const qamount = document.getElementById("qamount").value;
+      const qtype = document.getElementById("qtype").value;
+
+      document.getElementById("out").textContent = "Generating quiz...";
+
+      const res = await fetch("/api/quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject,
+          material,
+          qamount,
+          qtype
+        })
+      });
+
+      const text = await res.text();
+      document.getElementById("out").textContent = text;
+    }
+  </script>
+</body>
+</html>
